@@ -22,6 +22,16 @@ namespace calc
         return std::fmod(a, b);
     }
 
+    inline float Pow(float a, float exp)
+    {
+        return std::pow(a, exp);
+    }
+
+    inline float3 Pow(float3 a, float exp)
+    {
+        return { Pow(a.x, exp), Pow(a.y, exp), Pow(a.z, exp) };
+    }
+
     template<typename T>
     inline T Min(T x, T minValue)
     {
@@ -40,12 +50,55 @@ namespace calc
         return Min(Max(x, minValue), maxValue);
     }
 
+    inline float Floor(float x)
+    {
+        return std::floor(x);
+    }
+
     inline float ToRadians(float degrees) { return degrees * TAU / 360.f; }
 }
 
+inline float2 operator-(float2 a) { return { -a.x, -a.y }; }
+inline float2 operator+(float2 a, float2 b) { return { a.x + b.x, a.y + b.y }; }
+inline float2 operator-(float2 a, float2 b) { return { a.x - b.x, a.y - b.y }; }
+inline float2 operator*(float2 a, float2 b) { return { a.x * b.x, a.y * b.y }; }
+inline float2 operator/(float2 a, float2 b) { return { a.x / b.x, a.y / b.y }; }
 
-inline float3 operator+(float3 a, float3 b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
+inline float2 operator+(float2 a, float b) { return { a.x + b, a.y + b }; }
+inline float2 operator-(float2 a, float b) { return { a.x - b, a.y - b }; }
+inline float2 operator*(float2 a, float b) { return { a.x * b, a.y * b }; }
+inline float2 operator/(float2 a, float b) { return { a.x / b, a.y / b }; }
+
+inline float2& operator+=(float2& a, float2 b) { a = a + b; return a; }
+inline float2& operator-=(float2& a, float2 b) { a = a - b; return a; }
+inline float2& operator*=(float2& a, float2 b) { a = a * b; return a; }
+inline float2& operator/=(float2& a, float2 b) { a = a / b; return a; }
+
+inline float2& operator+=(float2& a, float b) { a = a + b; return a; }
+inline float2& operator-=(float2& a, float b) { a = a - b; return a; }
+inline float2& operator*=(float2& a, float b) { a = a * b; return a; }
+inline float2& operator/=(float2& a, float b) { a = a / b; return a; }
+
 inline float3 operator-(float3 a) { return { -a.x, -a.y, -a.z }; }
+inline float3 operator+(float3 a, float3 b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
+inline float3 operator-(float3 a, float3 b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
+inline float3 operator*(float3 a, float3 b) { return { a.x * b.x, a.y * b.y, a.z * b.z }; }
+inline float3 operator/(float3 a, float3 b) { return { a.x / b.x, a.y / b.y, a.z / b.z }; }
+
+inline float3 operator+(float3 a, float b) { return { a.x + b, a.y + b, a.z + b }; }
+inline float3 operator-(float3 a, float b) { return { a.x - b, a.y - b, a.z - b }; }
+inline float3 operator*(float3 a, float b) { return { a.x * b, a.y * b, a.z * b }; }
+inline float3 operator/(float3 a, float b) { return { a.x / b, a.y / b, a.z / b }; }
+
+inline float3& operator+=(float3& a, float3 b) { a = a + b; return a; }
+inline float3& operator-=(float3& a, float3 b) { a = a - b; return a; }
+inline float3& operator*=(float3& a, float3 b) { a = a * b; return a; }
+inline float3& operator/=(float3& a, float3 b) { a = a / b; return a; }
+
+inline float3& operator+=(float3& a, float b) { a = a + b; return a; }
+inline float3& operator-=(float3& a, float b) { a = a - b; return a; }
+inline float3& operator*=(float3& a, float b) { a = a * b; return a; }
+inline float3& operator/=(float3& a, float b) { a = a / b; return a; }
 
 inline mat4 mat4Identity()
 {
@@ -62,9 +115,20 @@ inline mat4 mat4Scale(float s)
 {
     return
     {
-          s, 0.f, 0.f, 0.f,
+        s, 0.f, 0.f, 0.f,
         0.f,   s, 0.f, 0.f,
         0.f, 0.f,   s, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+}
+
+inline mat4 mat4Scale(float3 s)
+{
+    return
+    {
+        s.x, 0.f, 0.f, 0.f,
+        0.f, s.y, 0.f, 0.f,
+        0.f, 0.f, s.z, 0.f,
         0.f, 0.f, 0.f, 1.f
     };
 }
@@ -106,6 +170,16 @@ inline mat4 mat4RotateY(float radians)
     };
 }
 
+inline mat4 mat4Transpose(const mat4& m)
+{
+    return {
+        m.c[0].e[0], m.c[1].e[0], m.c[2].e[0], m.c[3].e[0],
+        m.c[0].e[1], m.c[1].e[1], m.c[2].e[1], m.c[3].e[1],
+        m.c[0].e[2], m.c[1].e[2], m.c[2].e[2], m.c[3].e[2],
+        m.c[0].e[3], m.c[1].e[3], m.c[2].e[3], m.c[3].e[3],
+    };
+}
+
 inline mat4 operator*(const mat4& a, const mat4& b)
 {
     mat4 res = {};
@@ -114,6 +188,16 @@ inline mat4 operator*(const mat4& a, const mat4& b)
             for (int k = 0; k < 4; ++k)
                 res.c[c].e[r] += a.c[k].e[r] * b.c[c].e[k];
     return res;
+}
+
+inline float4 operator*(const mat4& m, float4 v)
+{
+    float4 r;
+    r.x = v.x * m.c[0].e[0] + v.y * m.c[1].e[0] + v.z * m.c[2].e[0] + v.w * m.c[3].e[0];
+    r.y = v.x * m.c[0].e[1] + v.y * m.c[1].e[1] + v.z * m.c[2].e[1] + v.w * m.c[3].e[1];
+    r.z = v.x * m.c[0].e[2] + v.y * m.c[1].e[2] + v.z * m.c[2].e[2] + v.w * m.c[3].e[2];
+    r.w = v.x * m.c[0].e[3] + v.y * m.c[1].e[3] + v.z * m.c[2].e[3] + v.w * m.c[3].e[3];
+    return r;
 }
 
 inline mat4 mat4Perspective(float yFov, float aspect, float n, float f)

@@ -26,22 +26,24 @@ GLuint gl::CreateShader(GLenum type, int sourceCount, const char** sources)
     return shader;
 }
 
-GLuint gl::CreateBasicProgram(const char* vsStr, const char* fsStr)
+GLuint gl::CreateProgram(int vsStrsCount, const char** vsStrs, int fsStrsCount, const char** fsStrs)
 {
     GLuint program = glCreateProgram();
 
-    const char* vertexShaderSources[] = {
-        "#version 330\n",
-        vsStr
-    };
+    const char* shaderHeader = "#version 330\n";
 
-    const char* pixelShaderSources[] = {
-        "#version 330\n",
-        fsStr
-    };
+    std::vector<const char*> vertexShaderSources;
+    vertexShaderSources.push_back(shaderHeader);
+    for (int i = 0; i < vsStrsCount; ++i)
+        vertexShaderSources.push_back(vsStrs[i]);
 
-    GLuint vertexShader = gl::CreateShader(GL_VERTEX_SHADER, ARRAYSIZE(vertexShaderSources), vertexShaderSources);
-    GLuint pixelShader = gl::CreateShader(GL_FRAGMENT_SHADER, ARRAYSIZE(pixelShaderSources), pixelShaderSources);
+    std::vector<const char*> pixelShaderSources;
+    pixelShaderSources.push_back(shaderHeader);
+    for (int i = 0; i < fsStrsCount; ++i)
+        pixelShaderSources.push_back(fsStrs[i]);
+
+    GLuint vertexShader = gl::CreateShader(GL_VERTEX_SHADER,   (int)vertexShaderSources.size(), vertexShaderSources.data());
+    GLuint pixelShader  = gl::CreateShader(GL_FRAGMENT_SHADER, (int)pixelShaderSources.size(),  pixelShaderSources.data());
 
     glAttachShader(program, vertexShader);
     glAttachShader(program, pixelShader);
@@ -60,6 +62,11 @@ GLuint gl::CreateBasicProgram(const char* vsStr, const char* fsStr)
     glDeleteShader(pixelShader);
 
     return program;
+}
+
+GLuint gl::CreateBasicProgram(const char* vsStr, const char* fsStr)
+{
+    return CreateProgram(1, &vsStr, 1, &fsStr);
 }
 
 void gl::UploadPerlinNoise(int width, int height, float z, float lacunarity, float gain, float offset, int octaves)
@@ -81,22 +88,36 @@ void gl::UploadPerlinNoise(int width, int height, float z, float lacunarity, flo
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, pixels.data());
 }
 
-void gl::UploadImage(const char* file)
+void gl::UploadImage(const char* file, bool linear)
 {
     int width    = 0;
     int height   = 0;
     int channels = 0;
 
     stbi_set_flip_vertically_on_load(1);
-    unsigned char* colors = stbi_load(file, &width, &height, &channels, 0);
+    void* colors;
+
+    if (linear)
+        colors = stbi_loadf(file, &width, &height, &channels, 0);
+    else
+        colors = stbi_load(file, &width, &height, &channels, 0);
 
     if (colors == nullptr)
         fprintf(stderr, "Failed to load image '%s'\n", file);
     else
         printf("Load image '%s' (%dx%d %d channels)\n", file, width, height, channels);
 
-    GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, colors);
+    GLenum format;
+    switch (channels)
+    {
+    case 1:          format = GL_RED;  break;
+    case 2:          format = GL_RG;   break;
+    case 3:          format = GL_RGB;  break;
+    case 4: default: format = GL_RGBA; break;
+    }
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, linear ? GL_FLOAT : GL_UNSIGNED_BYTE, colors);
 
     stbi_image_free(colors);
 }

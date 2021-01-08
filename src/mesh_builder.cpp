@@ -1,6 +1,8 @@
 
 #include <tiny_obj_loader.h>
 
+#include "calc.hpp"
+
 #include "mesh_builder.hpp"
 
 struct FullVertex
@@ -184,9 +186,9 @@ MeshSlice MeshBuilder::LoadObj(int* startIndex, const char* objFile, const char*
 
                     FullVertex vert = {};
 
-                    vert.position.x = attrib.vertices[3 * idx.vertex_index + 0] * scale;
-                    vert.position.y = attrib.vertices[3 * idx.vertex_index + 1] * scale;
-                    vert.position.z = attrib.vertices[3 * idx.vertex_index + 2] * scale;
+                    vert.position.x = attrib.vertices[3 * idx.vertex_index + 0];
+                    vert.position.y = attrib.vertices[3 * idx.vertex_index + 1];
+                    vert.position.z = attrib.vertices[3 * idx.vertex_index + 2];
 
                     if (!attrib.normals.empty())
                     {
@@ -217,6 +219,9 @@ MeshSlice MeshBuilder::LoadObj(int* startIndex, const char* objFile, const char*
 
         SaveObjToCache(vertices, objFile);
     }
+
+    for (FullVertex& vertex : vertices)
+        vertex.position *= scale;
 
     int count = (int)vertices.size();
     ConvertVertices(GetDst(startIndex, count), vertices.data(), count, descriptor);

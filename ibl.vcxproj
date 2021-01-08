@@ -91,6 +91,7 @@
   <ItemGroup>
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\demo_dll_wrapper.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
     <ClCompile Include="src\demo_quad.cpp" />
@@ -105,13 +106,24 @@
     <ClCompile Include="third_party\src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="third_party\src\imgui_tables.cpp" />
     <ClCompile Include="third_party\src\imgui_widgets.cpp" />
-    <ClCompile Include="third_party\src\stb_image.cpp" />
-    <ClCompile Include="third_party\src\stb_perlin.cpp" />
-    <ClCompile Include="third_party\src\tiny_obj_loader.cpp" />
+    <ClCompile Include="third_party\src\stb_image.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="third_party\src\stb_perlin.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile Include="third_party\src\tiny_obj_loader.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\calc.hpp" />
     <ClInclude Include="src\camera.hpp" />
+    <ClInclude Include="src\data.hpp" />
     <ClInclude Include="src\demo.hpp" />
     <ClInclude Include="src\demo_dll_wrapper.hpp" />
     <ClInclude Include="src\demo_fbo.hpp" />

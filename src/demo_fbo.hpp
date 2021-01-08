@@ -14,7 +14,10 @@ public:
     void UpdateAndRender(const DemoInputs& inputs) override;
     const char* Name() const override { return "FBO"; }
 
-private:
+    void RenderTavern(const mat4& projection, const mat4& view, const mat4& model);
+    void RenderTavernWithPostprocess(const mat4& projection, const mat4& view, const mat4& model);
+
+protected:
     struct Framebuffer
     {
         void Generate(int width, int height);
@@ -39,10 +42,12 @@ private:
     Framebuffer framebuffer = {};
     GLuint mainProgram = 0;
     GLuint diffuseTexture = 0;
-    GLuint specularTexture = 0;
+    GLuint emissiveTexture = 0;
     MeshSlice fullscreenQuad = {};
 
     // Second pass data (postprocess)
     GLuint postProcessProgram = 0;
     MeshSlice obj = {};
+
+    float time = 0.f;
 };
