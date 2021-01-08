@@ -121,7 +121,7 @@ DemoQuad::~DemoQuad()
 
 void DemoQuad::UpdateAndRender(const DemoInputs& inputs)
 {
-    mainCamera.UpdateFreeFly(inputs.cameraInputs);
+    //mainCamera.UpdateFreeFly(inputs.cameraInputs);
 
     static float time = 0.f;
     time += 1.f / 60.f;

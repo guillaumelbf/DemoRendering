@@ -101,6 +101,45 @@ void gl::UploadImage(const char* file)
     stbi_image_free(colors);
 }
 
+void gl::UploadImageCubeMap(const std::string& folderPath)
+{
+    const std::string faces[6] =
+    {
+        "right.jpg",
+        "left.jpg",
+        "top.jpg",
+        "bottom.jpg",
+        "back.jpg",
+        "front.jpg"
+    };
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+
+    for (size_t i = 0; i < 6; i++)
+    {
+        std::string curFile = (folderPath + faces[i]);
+        stbi_set_flip_vertically_on_load(false);
+        unsigned char* colors = stbi_load(curFile.c_str(), &width, &height, &channels, 0);
+        if (colors == nullptr)
+            fprintf(stderr, "Failed to load image '%s'\n", curFile.c_str());
+        else
+            printf("Load image '%s' (%dx%d %d channels)\n", curFile.c_str(), width, height, channels);
+
+        GLenum format = (channels == 3) ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, colors);
+
+        stbi_image_free(colors);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
 void gl::SetTextureDefaultParams(bool genMipmap)
 {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

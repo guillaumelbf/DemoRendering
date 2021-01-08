@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\demo_dll_wrapper.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="src\demo_dll_wrapper.hpp" />
     <ClInclude Include="src\demo_fbo.hpp" />
     <ClInclude Include="src\demo_quad.hpp" />
+    <ClInclude Include="src\demo_skybox.hpp" />
     <ClInclude Include="src\gl_helpers.hpp" />
     <ClInclude Include="src\mesh_builder.hpp" />
     <ClInclude Include="src\types.hpp" />

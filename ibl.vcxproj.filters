@@ -41,6 +41,7 @@
     <ClCompile Include="src\mesh_builder.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
     <ClCompile Include="src\demo_quad.cpp" />
+    <ClCompile Include="src\demo_skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="third_party">
@@ -57,5 +58,6 @@
     <ClInclude Include="src\mesh_builder.hpp" />
     <ClInclude Include="src\demo_fbo.hpp" />
     <ClInclude Include="src\demo_quad.hpp" />
+    <ClInclude Include="src\demo_skybox.hpp" />
   </ItemGroup>
 </Project>

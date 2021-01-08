@@ -21,6 +21,8 @@
 
 // TODO: Add demo include here
 
+#include "demo_skybox.hpp"
+
 extern "C"
 {
     _declspec(dllexport) int NvOptimusEnablement = 1;
@@ -139,6 +141,7 @@ int main(int argc, char* argv[])
     demos.push_back(new DemoQuad(demoInputs));
     demos.push_back(new DemoFBO(demoInputs));
     // TODO: Here, add other demos
+    demos.push_back(new DemoSkybox(demoInputs));
     //demos.push_back(new DemoBloom(demoInputs));
 
     // Load some demo from dll
