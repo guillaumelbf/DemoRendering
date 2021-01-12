@@ -17,6 +17,8 @@ public:
     void RenderTavern(const mat4& projection, const mat4& view, const mat4& model);
     void RenderTavernWithPostprocess(const mat4& projection, const mat4& view, const mat4& model);
 
+    GLuint GetDiffuseTexture() const { return diffuseTexture; }
+
 protected:
     struct Framebuffer
     {
@@ -28,8 +30,8 @@ protected:
         int height = 0;
 
         GLuint id = 0;
-        GLuint baseTexture = 0;
         GLuint finalTexture = 0;
+        GLuint emissiveTexture = 0;
         GLuint depthRenderbuffer = 0;
     };
 

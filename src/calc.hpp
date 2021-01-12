@@ -190,6 +190,8 @@ inline mat4 operator*(const mat4& a, const mat4& b)
     return res;
 }
 
+inline mat4& operator*=(mat4& a, const mat4& b) { a = a * b; return a; }
+
 inline float4 operator*(const mat4& m, float4 v)
 {
     float4 r;

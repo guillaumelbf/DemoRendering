@@ -1,7 +1,10 @@
 
 #include <cstddef>
+#include <cstdio>
 #include <vector>
+
 #include <imgui.h>
+#include <stb_perlin.h>
 
 #include "types.hpp"
 #include "calc.hpp"
@@ -140,6 +143,8 @@ DemoFBO::DemoFBO(const DemoInputs& inputs)
             
                 // Show normals only
                 //finalColor    = vec4(worldNormal, 1.0);
+
+                //finalColor      = vec4(texture(diffuseTexture, vUV).rgb, 1.0);
             }
             )GLSL"
         };
@@ -191,14 +196,16 @@ DemoFBO::DemoFBO(const DemoInputs& inputs)
 
     // Load diffuse/emissive texture
     {
-        glGenTextures(1, &diffuseTexture);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-        gl::UploadImage("media/fantasy_game_inn_diffuse.png", true);
-        gl::SetTextureDefaultParams();
+        {
+            glGenTextures(1, &diffuseTexture);
+            glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+            gl::UploadImage("media/fantasy_game_inn_diffuse.png", true); // 2048x2048
+            gl::SetTextureDefaultParams();
+        }
 
         glGenTextures(1, &emissiveTexture);
         glBindTexture(GL_TEXTURE_2D, emissiveTexture);
-        gl::UploadImage("media/fantasy_game_inn_emissive.png");
+        gl::UploadImage("media/fantasy_game_inn_emissive.png", true);
         gl::SetTextureDefaultParams();
     }
 
@@ -210,8 +217,8 @@ void DemoFBO::Framebuffer::Generate(int width, int height)
 {
     // Create base buffer
     {
-        glGenTextures(1, &baseTexture);
-        glBindTexture(GL_TEXTURE_2D, baseTexture);
+        glGenTextures(1, &finalTexture);
+        glBindTexture(GL_TEXTURE_2D, finalTexture);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -224,8 +231,8 @@ void DemoFBO::Framebuffer::Generate(int width, int height)
 
     // Create final buffer
     {
-        glGenTextures(1, &finalTexture);
-        glBindTexture(GL_TEXTURE_2D, finalTexture);
+        glGenTextures(1, &emissiveTexture);
+        glBindTexture(GL_TEXTURE_2D, emissiveTexture);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -248,8 +255,8 @@ void DemoFBO::Framebuffer::Generate(int width, int height)
     glGenFramebuffers(1, &id);
     glBindFramebuffer(GL_FRAMEBUFFER, id);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, baseTexture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, finalTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, finalTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, emissiveTexture, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
 
     GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
@@ -268,9 +275,9 @@ void DemoFBO::Framebuffer::Resize(int width, int height)
 {
     this->width = width;
     this->height = height;
-    glBindTexture(GL_TEXTURE_2D, baseTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindTexture(GL_TEXTURE_2D, finalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, emissiveTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
@@ -279,8 +286,8 @@ void DemoFBO::Framebuffer::Resize(int width, int height)
 void DemoFBO::Framebuffer::Delete()
 {
     glDeleteFramebuffers(1, &id);
-    glDeleteTextures(1, &baseTexture);
     glDeleteTextures(1, &finalTexture);
+    glDeleteTextures(1, &emissiveTexture);
     glDeleteRenderbuffers(1, &depthRenderbuffer);
 }
 
@@ -338,15 +345,20 @@ void DemoFBO::UpdateAndRender(const DemoInputs& inputs)
     mainCamera.UpdateFreeFly(inputs.cameraInputs);
 
     // Show debug info
-    static bool finalImage = false;
-    ImGui::Checkbox("final render", &finalImage);
-    ImVec2 imageSize = { 128, 128 };
-    ImGui::Image((ImTextureID)(size_t)framebuffer.baseTexture, imageSize,  ImVec2(0, 1), ImVec2(1, 0));
-    ImGui::SameLine();
-    ImGui::Image((ImTextureID)(size_t)framebuffer.finalTexture, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+    static bool applyPostprocess = false;
+    static bool showEmissive = false;
+    ImGui::Checkbox("Perform post-process pass (use fbo)", &applyPostprocess);
+    if (applyPostprocess)
+    {
+        ImGui::Checkbox("Show emissive only", &showEmissive);
+        ImVec2 imageSize = { 128, 128 };
+        ImGui::Image((ImTextureID)(size_t)framebuffer.finalTexture, imageSize,  ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::SameLine();
+        ImGui::Image((ImTextureID)(size_t)framebuffer.emissiveTexture, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+    }
 
     // Setup main program uniforms
-    mat4 projection = mat4Perspective(calc::ToRadians(60.f), inputs.windowSize.x / inputs.windowSize.y, 0.1f, 40.f);
+    mat4 projection = mat4Perspective(calc::ToRadians(60.f), inputs.windowSize.x / inputs.windowSize.y, 0.1f, 400.f);
     mat4 view       = mainCamera.GetViewMatrix();
     mat4 model      = mat4Identity();
 
@@ -359,7 +371,7 @@ void DemoFBO::UpdateAndRender(const DemoInputs& inputs)
     {
         mat4 colorTransform = //mat4Identity();
         {
-            calc::Sin(time * calc::TAU) * 0.f + 1.f, 0.f, 0.f, 0.f,
+            calc::Sin(time * calc::TAU) * 0.5f + 1.f, 0.f, 0.f, 0.f,
             0.f, 1.f, 0.f, 0.f,
             0.f, 0.f, 1.f, 0.f,
             0.f, 0.f, 0.f, 1.f,
@@ -385,35 +397,50 @@ void DemoFBO::UpdateAndRender(const DemoInputs& inputs)
 
     // Render 3d model to framebuffer
     {
-        glViewport(0, 0, framebuffer.width, framebuffer.height);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        if (applyPostprocess)
+        {
+            glViewport(0, 0, framebuffer.width, framebuffer.height);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+        }
+        else
+        {
+            glEnable(GL_FRAMEBUFFER_SRGB);
+        }
+
         RenderTavern(projection, view, model);
+
+        if (!applyPostprocess)
+            glDisable(GL_FRAMEBUFFER_SRGB);
     }
 
-    // Render framebuffer to screen using postprocess shader and a fullscreen quad
+    if (applyPostprocess)
     {
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-        glBindFramebuffer(GL_FRAMEBUFFER, previousFramebuffer);
-        glEnable(GL_FRAMEBUFFER_SRGB);
-        glUseProgram(postProcessProgram);
+        // Render framebuffer to screen using postprocess shader and a fullscreen quad
+        {
+            glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            glBindFramebuffer(GL_FRAMEBUFFER, previousFramebuffer);
+            glEnable(GL_FRAMEBUFFER_SRGB);
+            glUseProgram(postProcessProgram);
 
-        glBindTexture(GL_TEXTURE_2D, framebuffer.baseTexture);
-        glBindVertexArray(vertexArrayObject);
-        glDrawArrays(GL_TRIANGLES, fullscreenQuad.start, fullscreenQuad.count);
-    }
+            glBindTexture(GL_TEXTURE_2D, showEmissive ? framebuffer.emissiveTexture : framebuffer.finalTexture);
+            glBindVertexArray(vertexArrayObject);
 
-    // Copy framebuffer depth into backbuffer
-    {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
-            viewport[0], viewport[1], viewport[2], viewport[3], 
-            GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glDisable(GL_FRAMEBUFFER_SRGB);
+            glDrawArrays(GL_TRIANGLES, fullscreenQuad.start, fullscreenQuad.count);
+            glDisable(GL_FRAMEBUFFER_SRGB);
+        }
+
+        // Copy framebuffer depth into backbuffer
+        {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
+                viewport[0], viewport[1], viewport[2], viewport[3], 
+                GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        }
     }
 }
 
