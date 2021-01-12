@@ -13,5 +13,6 @@ namespace gl
     void UploadPerlinNoise(int width, int height, float z, float lacunarity = 2.f, float gain = 0.5f, float offset = 1.f, int octaves = 6);
     void UploadImageCubeMap(const std::string& folderPath);
     void UploadImage(const char* file, bool linear = false);
+    void UploadCubemap(const char* filename);
     void SetTextureDefaultParams(bool genMipmap = true);
 }
