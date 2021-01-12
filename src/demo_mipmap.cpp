@@ -13,14 +13,37 @@ DemoMipmap::DemoMipmap(const DemoInputs& inputs)
     
     // TODO: Remplacer le niveau 1 de mipmap par une texture unie
     {
-        int width, height;
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 1, GL_TEXTURE_WIDTH, &width);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 1, GL_TEXTURE_HEIGHT, &height);
+        int width0, height0;
+        int width1, height1;
+        int width2, height2;
+        int width3, height3;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 1, GL_TEXTURE_WIDTH, &width1);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 1, GL_TEXTURE_HEIGHT, &height1);
+        width0 = width1 * 2;
+        height0 = height1 * 2;
+        width2 = width1 / 2;
+        width3 = width2 / 2;
+        height2 = height1 / 2;
+        height3 = height2 / 2;
 
-        float4 color =  { 1.f, 0.f, 0.f, 1.f };
-        std::vector<float4> mipmapLevel1(width * height, color);
+        float4 color0 = { 1.f, 0.f, 1.f, 1.f };
+        float4 color1 = { 1.f, 0.f, 0.f, 1.f };
+        float4 color2 = { 0.f, 1.f, 0.f, 1.f };
+        float4 color3 = { 0.f, 0.f, 1.f, 1.f };
+
+        std::vector<float4> mipmapLevel0(width0 * height0, color0);
+        std::vector<float4> mipmapLevel1(width1*height1, color1);
+        std::vector<float4> mipmapLevel2(width2 * height2, color2);
+        std::vector<float4> mipmapLevel3(width3 * height3, color3);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width0, height0, 0, GL_RGBA, GL_FLOAT, mipmapLevel0.data());
+        glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, width1, height1, 0, GL_RGBA, GL_FLOAT, mipmapLevel1.data());
+        glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, width1, height1, 0, GL_RGBA, GL_FLOAT, mipmapLevel1.data());
+        glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, width2, height2, 0, GL_RGBA, GL_FLOAT, mipmapLevel2.data());
+        glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA, width3, height3, 0, GL_RGBA, GL_FLOAT, mipmapLevel3.data());
     
         // Utiliser glTexImage2D
     }

@@ -89,12 +89,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\demo_mipmap.cpp" />
     <ClCompile Include="src\demo_skybox.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\demo_dll_wrapper.cpp" />
     <ClCompile Include="src\demo_fbo.cpp" />
     <ClCompile Include="src\demo_quad.cpp" />
+    <ClCompile Include="src\demo_texture_3d.cpp" />
     <ClCompile Include="src\gl_helpers.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mesh_builder.cpp" />
@@ -127,8 +129,10 @@
     <ClInclude Include="src\demo.hpp" />
     <ClInclude Include="src\demo_dll_wrapper.hpp" />
     <ClInclude Include="src\demo_fbo.hpp" />
+    <ClInclude Include="src\demo_mipmap.hpp" />
     <ClInclude Include="src\demo_quad.hpp" />
     <ClInclude Include="src\demo_skybox.hpp" />
+    <ClInclude Include="src\demo_texture_3d.hpp" />
     <ClInclude Include="src\gl_helpers.hpp" />
     <ClInclude Include="src\mesh_builder.hpp" />
     <ClInclude Include="src\types.hpp" />

@@ -150,6 +150,11 @@ void DemoTexture3D::UpdateAndRender(const DemoInputs& inputs)
         ImGui::Checkbox("smooth", &smooth);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, smooth ? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, smooth ? GL_LINEAR : GL_NEAREST);
+        ImGui::DragInt("Z resolution", &zResolution, 1.f, 0, 512);
+        ImGui::DragFloat("Alpha threshold", &alphaThreshold, 0.1f, 0, 1.f);
+        ImGui::DragFloat("Cube size", &cubeSize, 0.1f, 0.5f, 10.f);
+        ImGui::DragFloat("UV scale", &uvScale, 0.1f, 0, 512);
+        ImGui::DragFloat("Speed",&speed,0.1f,0,5);
     }
 
     glViewport(0, 0, (int)inputs.windowSize.x, (int)inputs.windowSize.y);
@@ -160,7 +165,7 @@ void DemoTexture3D::UpdateAndRender(const DemoInputs& inputs)
     glUseProgram(program);
     mat4 projection = mat4Perspective(calc::ToRadians(60.f), inputs.windowSize.x / inputs.windowSize.y, 0.01f, 50.f);
     mat4 view       = mainCamera.GetViewMatrix();
-    mat4 model      = mat4Identity();
+    mat4 model      = mat4Identity() * mat4Scale(cubeSize);
 
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, projection.e);
     glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, view.e);
@@ -171,7 +176,12 @@ void DemoTexture3D::UpdateAndRender(const DemoInputs& inputs)
     glClearColor(0.2f, 0.2f, 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // draw X quads
-    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, model.e);
-    glDrawArrays(GL_TRIANGLES, 0, 6); // Draw quad
+    float zStep = (cubeSize / zResolution);
+    for (size_t i = 0; i < zResolution; i++)
+    {
+        // draw X quads
+        model *= mat4Translate({ 0.f, 0.f, zStep});
+        glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, model.e);
+        glDrawArrays(GL_TRIANGLES, 0, 6); // Draw quad
+    }
 }

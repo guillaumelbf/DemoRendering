@@ -20,5 +20,11 @@ private:
     GLuint program = 0;
     GLuint texture = 0;
 
+    int zResolution = 256;
+    float alphaThreshold = 0.2f;
+    float cubeSize = 2.f;
+    float uvScale = 0.2f;
+    float speed = 0.2f;
+
     Camera mainCamera = {};
 };
