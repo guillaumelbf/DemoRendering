@@ -14,30 +14,69 @@
 struct Vertex
 {
     float3 position;
+    float3 normal;
 };
 
 DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 {
     // Upload vertex buffer
+    /// CUBE
     {
         // In memory
         Vertex* vertices = nullptr;
         int vertexCount = 0;
-
         {
             VertexDescriptor descriptor = {};
             descriptor.size = sizeof(Vertex);
             descriptor.positionOffset = offsetof(Vertex, position);
+            descriptor.hasNormal = true;
+            descriptor.normalOffset = offsetof(Vertex, normal);
 
             MeshBuilder meshBuilder(descriptor, (void**)&vertices, &vertexCount);
 
-            fullscreenQuad = meshBuilder.GenQuad(nullptr, 1.0f, 1.0f);
-            obj = meshBuilder.LoadObj(nullptr, "media/cube.obj", "media", 1.f);
+            skybox = meshBuilder.LoadObj(nullptr, "media/cube.obj", "media", 1.f);
         }
 
         // In VRAM
-        glGenBuffers(1, &vertexBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+        glGenBuffers(1, &skyboxVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(Vertex), vertices, GL_STATIC_DRAW);
+
+        free(vertices);
+    }
+
+    {
+        glGenVertexArrays(1, &skyboxVAO);
+        glBindVertexArray(skyboxVAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, position));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, normal));
+    }
+
+    /// SPHERE
+    {
+        // In memory
+        Vertex* vertices = nullptr;
+        int vertexCount = 0;
+        
+        {
+            VertexDescriptor descriptor = {};
+            descriptor.size = sizeof(Vertex);
+            descriptor.positionOffset = offsetof(Vertex, position);
+            descriptor.hasNormal = true;
+            descriptor.normalOffset = offsetof(Vertex, normal);
+
+            MeshBuilder meshBuilder(descriptor, (void**)&vertices, &vertexCount);
+
+            sphere = meshBuilder.GenIcosphere(nullptr,4);
+        }
+
+        // In VRAM
+        glGenBuffers(1, &sphereVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
         glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(Vertex), vertices, GL_STATIC_DRAW);
 
         free(vertices);
@@ -45,12 +84,14 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 
     // Vertex layout
     {
-        glGenVertexArrays(1, &skyboxVAO);
-        glBindVertexArray(skyboxVAO);
+        glGenVertexArrays(1,&sphereVAO);
+        glBindVertexArray(sphereVAO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, position));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)offsetof(Vertex, normal));
     }
 
     // Skybox program
@@ -89,10 +130,14 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
     );
 
     // Cube program
-    cubeProgram = gl::CreateBasicProgram(
+    sphereProgram = gl::CreateBasicProgram(
         // Vertex shader
         R"GLSL(
-        layout(location = 0) in vec3 aPosition;       
+        layout(location = 0) in vec3 aPosition;    
+        layout(location = 1) in vec3 aNormal;
+
+        out vec3 Normal;
+        out vec3 Position;
 
         uniform mat4 projection;
         uniform mat4 view;
@@ -100,7 +145,9 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 
         void main()
         {
-            gl_Position = projection * view * model * vec4(aPosition, 1.0);
+            Normal = mat3(transpose(inverse(model))) * aNormal;
+            Position = vec3(model * vec4(aPosition,1.0));
+            gl_Position = projection * view * vec4(Position, 1.0);
         }
         )GLSL",
 
@@ -109,9 +156,17 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 
         out vec4 fragColor;
 
+        in vec3 Normal;
+        in vec3 Position;
+
+        uniform vec3 cameraPos;
+        uniform samplerCube skybox;
+
         void main()
         {
-            fragColor = vec4(1,1,1,1);
+            vec3 I = normalize(Position - cameraPos);
+            vec3 R = reflect(I, normalize(Normal));
+            fragColor = vec4(texture(skybox, R).rgb, 1.0);
         }
         )GLSL"
     );
@@ -127,8 +182,11 @@ DemoSkybox::~DemoSkybox()
     // Delete OpenGL objects
     glDeleteTextures(1, &skyboxTexture);
     glDeleteProgram(skyboxProgram);
+    glDeleteProgram(sphereProgram);
+    glDeleteVertexArrays(1, &sphereVAO);
+    glDeleteBuffers(1, &sphereVBO);
     glDeleteVertexArrays(1, &skyboxVAO);
-    glDeleteBuffers(1, &vertexBuffer);
+    glDeleteBuffers(1, &skyboxVBO);
 }
 
 void DemoSkybox::UpdateAndRender(const DemoInputs& inputs)
@@ -146,14 +204,17 @@ void DemoSkybox::UpdateAndRender(const DemoInputs& inputs)
         mat4 view = mainCamera.GetViewMatrix();
         mat4 model = mat4Scale(1.f);
 
-        glUseProgram(cubeProgram);
-        glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projection"), 1, GL_FALSE, projection.e);
-        glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "view"), 1, GL_FALSE, view.e);
-        glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "model"), 1, GL_FALSE, model.e);
+        glUseProgram(sphereProgram);
+        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projection"), 1, GL_FALSE, projection.e);
+        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "view"), 1, GL_FALSE, view.e);
+        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "model"), 1, GL_FALSE, model.e);
+        glUniform3f(glGetUniformLocation(sphereProgram, "cameraPos"),mainCamera.position.x,mainCamera.position.y,mainCamera.position.z);
     }
 
-    glBindVertexArray(skyboxVAO);
-    glDrawArrays(GL_TRIANGLES, obj.start, obj.count);
+    glBindVertexArray(sphereVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+    glDrawArrays(GL_TRIANGLES, sphere.start, sphere.count);
 
 
     // Draw Skybox
@@ -172,14 +233,13 @@ void DemoSkybox::UpdateAndRender(const DemoInputs& inputs)
         glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "view"), 1, GL_FALSE, view.e);
         glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "model"), 1, GL_FALSE, model.e);
 
-        glUniform1i(glGetUniformLocation(skyboxProgram, "skybox"), 0);
+        //glUniform1i(glGetUniformLocation(skyboxProgram, "skybox"), 0);
     }
 
     glBindVertexArray(skyboxVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
-
-    glDrawArrays(GL_TRIANGLES, obj.start, obj.count); // Draw triangle
+    glDrawArrays(GL_TRIANGLES, skybox.start, skybox.count); // Draw triangle
     glDepthFunc(GL_LESS);
 }
 

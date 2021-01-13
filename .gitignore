@@ -5,3 +5,5 @@ imgui.ini
 src-priv
 ibl-paul*
 media/*.cache
+.idea/*
+cmake-build-debug/*

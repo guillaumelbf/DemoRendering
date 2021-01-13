@@ -11,21 +11,24 @@ public:
 	~DemoSkybox();
 
 	void UpdateAndRender(const DemoInputs& inputs) final;
-	const char* Name() const final { return "Skybox"; }
+	const char* Name() const final { return "Skybox & Reflection"; }
 
 private:
 
     Camera mainCamera = {};
 
-    GLuint vertexBuffer = 0;
+    GLuint skyboxVBO = 0;
     GLuint skyboxVAO = 0;
+
+    GLuint sphereVBO = 0;
+    GLuint sphereVAO = 0;
 
     GLuint skyboxTexture = 0;
 
     GLuint skyboxProgram = 0;
-    GLuint cubeProgram = 0;
-    MeshSlice fullscreenQuad = {};
+    GLuint sphereProgram = 0;
 
-    MeshSlice obj = {};
+    MeshSlice skybox = {};
+    MeshSlice sphere = {};
 };
 
