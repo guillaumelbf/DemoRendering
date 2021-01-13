@@ -22,6 +22,11 @@ namespace calc
         return std::fmod(a, b);
     }
 
+    inline float Sqrt(float a)
+    {
+        return std::sqrt(a);
+    }
+
     inline float Pow(float a, float exp)
     {
         return std::pow(a, exp);
@@ -53,6 +58,12 @@ namespace calc
     inline float Floor(float x)
     {
         return std::floor(x);
+    }
+
+    template<typename T>
+    inline T Lerp(T a, T b, float t)
+    {
+        return (1.f - t) * a + t * b;
     }
 
     inline float ToRadians(float degrees) { return degrees * TAU / 360.f; }
@@ -99,6 +110,16 @@ inline float3& operator+=(float3& a, float b) { a = a + b; return a; }
 inline float3& operator-=(float3& a, float b) { a = a - b; return a; }
 inline float3& operator*=(float3& a, float b) { a = a * b; return a; }
 inline float3& operator/=(float3& a, float b) { a = a / b; return a; }
+
+inline float v3Length(float3 v)
+{
+    return calc::Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+inline float3 v3Normalize(float3 v)
+{
+    return v / v3Length(v);
+}
 
 inline mat4 mat4Identity()
 {

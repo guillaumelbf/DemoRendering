@@ -27,6 +27,7 @@ public:
 
     MeshSlice GenTriangle(int* startIndex);
     MeshSlice GenQuad(int* startIndex, float halfWidth, float halfHeight);
+    MeshSlice GenIcosphere(int* startIndex, int depth = 2);
     MeshSlice LoadObj(int* startIndex, const char* objFile, const char* mtlDir, float scale = 1.f);
 
 private:
@@ -36,4 +37,6 @@ private:
 
     void* GetDst(int* startIndex, int count);
     void* Grow(int count);
+
+    MeshSlice GenIcosphereFace(int* index, float3 a, float3 b, float3 c, int depth);
 };

@@ -111,6 +111,104 @@ MeshSlice MeshBuilder::GenQuad(int* startIndex, float halfWidth, float halfHeigh
     return { *vertexCount - count, count };
 }
 
+MeshSlice MeshBuilder::GenIcosphereFace(int* index, float3 a, float3 b, float3 c, int depth)
+{
+    int startIndex = *index;
+    if (depth == 0)
+    {
+        a = v3Normalize(a);
+        b = v3Normalize(b);
+        c = v3Normalize(c);
+
+        FullVertex vertices[] =
+        {
+            { a * 0.5f, a, { 0.f, 0.f }, { 1.f, 1.f, 1.f, 1.f } },
+            { b * 0.5f, b, { 0.f, 0.f }, { 1.f, 1.f, 1.f, 1.f } },
+            { c * 0.5f, c, { 0.f, 0.f }, { 1.f, 1.f, 1.f, 1.f } },
+        };
+        int count = ARRAYSIZE(vertices);
+        ConvertVertices(GetDst(index, count), vertices, count, descriptor);
+        *index += count;
+    }
+    else
+    {
+        float3 mab = a + (b-a) * 0.5f;
+        float3 mbc = b + (c-b) * 0.5f;
+        float3 mca = c + (a-c) * 0.5f;
+
+        GenIcosphereFace(index, a, mab, mca, depth-1);
+        GenIcosphereFace(index, b, mbc, mab, depth-1);
+        GenIcosphereFace(index, c, mca, mbc, depth-1);
+        GenIcosphereFace(index, mab, mbc, mca, depth-1);
+    }
+
+    return { startIndex, *index - startIndex };
+}
+
+MeshSlice MeshBuilder::GenIcosphere(int* startIndex, int depth)
+{
+    // Create iscosahedron positions (radius = 1)
+    float t = 1.f + sqrtf(5.f) / 2.f; // Golden ratio
+    float h = t;
+    float w = 1.f;
+
+    float3 positions[]
+    {
+        {-w, h, 0.f },
+        { w, h, 0.f },
+        {-w,-h, 0.f },
+        { w,-h, 0.f },
+
+        { 0.f,-w, h },
+        { 0.f, w, h },
+        { 0.f,-w,-h },
+        { 0.f, w,-h },
+
+        { h, 0.f,-w },
+        { h, 0.f, w },
+        {-h, 0.f,-w },
+        {-h, 0.f, w },
+    };
+
+    // Triangles
+    int indices[] =
+    {
+        0, 11,  5,
+        0,  5,  1,
+        0,  1,  7,
+        0,  7, 10,
+        0, 10, 11,
+
+        1,  5,  9,
+        5, 11,  4,
+       11, 10,  2,
+       10,  7,  6,
+        7,  1,  8,
+
+        3,  9,  4,
+        3,  4,  2,
+        3,  2,  6,
+        3,  6,  8,
+        3,  8,  9,
+
+        4,  9,  5,
+        2,  4, 11,
+        6,  2, 10,
+        8,  6,  7,
+        9,  8,  1,
+    };
+
+    int count = (int)(ARRAYSIZE(indices) * calc::Pow(4, (float)depth));
+    void* buffer = GetDst(startIndex, count);
+    int index = *vertexCount - count;
+    int indexTmp = index;
+
+    for (int i = 0; i < ARRAYSIZE(indices); i += 3)
+        GenIcosphereFace(&indexTmp, positions[indices[i+0]], positions[indices[i+1]], positions[indices[i+2]], depth);
+
+    return { index, count };
+}
+
 // Implement dumb caching to avoid parsing .obj again and again
 static bool LoadObjFromCache(std::vector<FullVertex>& mesh, const char* filename)
 {
