@@ -11,7 +11,7 @@ public:
 	~DemoSkybox();
 
 	void UpdateAndRender(const DemoInputs& inputs) final;
-	const char* Name() const final { return "Skybox & Reflection"; }
+	const char* Name() const final { return "Skybox & Reflection & Refraction"; }
 
 private:
 
@@ -26,7 +26,9 @@ private:
     GLuint skyboxTexture = 0;
 
     GLuint skyboxProgram = 0;
-    GLuint sphereProgram = 0;
+    GLuint reflectionProgram = 0;
+    GLuint refractionProgram = 0;
+    GLuint programUsed = 0;
 
     MeshSlice skybox = {};
     MeshSlice sphere = {};

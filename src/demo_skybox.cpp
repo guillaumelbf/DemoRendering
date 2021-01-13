@@ -129,8 +129,8 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
         )GLSL"
     );
 
-    // Cube program
-    sphereProgram = gl::CreateBasicProgram(
+    // Reflection
+    reflectionProgram = gl::CreateBasicProgram(
         // Vertex shader
         R"GLSL(
         layout(location = 0) in vec3 aPosition;    
@@ -171,10 +171,53 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
         )GLSL"
     );
 
+    //Refraction
+    refractionProgram = gl::CreateBasicProgram(
+        // Vertex shader
+        R"GLSL(
+        layout(location = 0) in vec3 aPosition;    
+        layout(location = 1) in vec3 aNormal;
+
+        out vec3 Normal;
+        out vec3 Position;
+
+        uniform mat4 projection;
+        uniform mat4 view;
+        uniform mat4 model;
+
+        void main()
+        {
+            Normal = mat3(transpose(inverse(model))) * aNormal;
+            Position = vec3(model * vec4(aPosition,1.0));
+            gl_Position = projection * view * vec4(Position, 1.0);
+        }
+        )GLSL",
+
+        // Fragment shader
+        R"GLSL(   
+
+        out vec4 fragColor;
+
+        in vec3 Normal;
+        in vec3 Position;
+
+        uniform float inRatio;
+        uniform vec3 cameraPos;
+        uniform samplerCube skybox;
+
+        void main()
+        {
+            float ratio = 1.00 / inRatio;
+            vec3 I = normalize(Position - cameraPos);
+            vec3 R = refract(I, normalize(Normal), ratio);
+            fragColor = vec4(texture(skybox, R).rgb, 1.0);
+        }
+        )GLSL"
+    );
+
     glGenTextures(1, &skyboxTexture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
     gl::UploadImageCubeMap("media/skybox/");
-    //gl::SetTextureDefaultParams();
 }
 
 DemoSkybox::~DemoSkybox()
@@ -182,7 +225,8 @@ DemoSkybox::~DemoSkybox()
     // Delete OpenGL objects
     glDeleteTextures(1, &skyboxTexture);
     glDeleteProgram(skyboxProgram);
-    glDeleteProgram(sphereProgram);
+    glDeleteProgram(reflectionProgram);
+    glDeleteProgram(refractionProgram);
     glDeleteVertexArrays(1, &sphereVAO);
     glDeleteBuffers(1, &sphereVBO);
     glDeleteVertexArrays(1, &skyboxVAO);
@@ -197,6 +241,29 @@ void DemoSkybox::UpdateAndRender(const DemoInputs& inputs)
     glViewport(0, 0, (int)inputs.windowSize.x, (int)inputs.windowSize.y);
     glEnable(GL_DEPTH_TEST);
 
+    static float ratio = 1.f;
+    {
+        static int e = 0;
+        ImGui::RadioButton("Reflection",&e,0);
+        ImGui::RadioButton("Refraction",&e,1);
+
+        if(e == 0)
+        {
+            programUsed = reflectionProgram;
+        }
+        else
+        {
+            ImGui::DragFloat("Ratio",&ratio,0.01f,1.f,30.f);
+            ImGui::Text("Air     = 1.00");
+            ImGui::Text("Water   = 1.33");
+            ImGui::Text("Ice     = 1.309");
+            ImGui::Text("Glass   = 1.52");
+            ImGui::Text("Diamond = 2.42");
+            programUsed = refractionProgram;
+        }
+        
+    }
+
     // Draw others
 
     {
@@ -204,11 +271,15 @@ void DemoSkybox::UpdateAndRender(const DemoInputs& inputs)
         mat4 view = mainCamera.GetViewMatrix();
         mat4 model = mat4Scale(1.f);
 
-        glUseProgram(sphereProgram);
-        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projection"), 1, GL_FALSE, projection.e);
-        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "view"), 1, GL_FALSE, view.e);
-        glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "model"), 1, GL_FALSE, model.e);
-        glUniform3f(glGetUniformLocation(sphereProgram, "cameraPos"),mainCamera.position.x,mainCamera.position.y,mainCamera.position.z);
+        glUseProgram(programUsed);
+        glUniformMatrix4fv(glGetUniformLocation(programUsed, "projection"), 1, GL_FALSE, projection.e);
+        glUniformMatrix4fv(glGetUniformLocation(programUsed, "view"), 1, GL_FALSE, view.e);
+        glUniformMatrix4fv(glGetUniformLocation(programUsed, "model"), 1, GL_FALSE, model.e);
+        glUniform3f(glGetUniformLocation(programUsed, "cameraPos"),mainCamera.position.x,mainCamera.position.y,mainCamera.position.z);
+        if(programUsed == refractionProgram)
+        {
+            glUniform1f(glGetUniformLocation(programUsed, "inRatio"),ratio);
+        }
     }
 
     glBindVertexArray(sphereVAO);
