@@ -2,13 +2,13 @@
 #include <cstdio>
 #include <vector>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define USE_PAUL_DLL
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #define NOMINMAX
-#define DLLEXPORT _declspec(dllexport)
 #endif
+#define DLLEXPORT __declspec(dllexport)
 #include <windows.h>
 #else
 #define DLLEXPORT 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     demoInputs.windowSize.x = (float)initWidth;
     demoInputs.windowSize.y = (float)initHeight;
 
-    int demoId = 4;
+    int demoId = 0;
     std::vector<Demo*> demos;
     demos.push_back(new DemoQuad(demoInputs));
     demos.push_back(new DemoFBO(demoInputs));
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
             if (ImGui::Button("<"))
                 demoId = calc::Modulo(demoId - 1, (int)demos.size());
             ImGui::SameLine();
-            ImGui::Text("%d/%d", demoId + 1, demos.size());
+            ImGui::Text("%d/%d", demoId + 1, (int)demos.size());
             ImGui::SameLine();
             if (ImGui::Button(">"))
                 demoId = calc::Modulo(demoId + 1, (int)demos.size());

@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef ARRAYSIZE
-#define ARRAYSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ARRAYSIZE(arr) ((int)(sizeof(arr) / sizeof(arr[0])))
 #endif
 
 union float2

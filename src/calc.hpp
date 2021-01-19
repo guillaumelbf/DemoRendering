@@ -121,6 +121,11 @@ inline float3 v3Normalize(float3 v)
     return v / v3Length(v);
 }
 
+inline float3 v3Cross(float3 a, float3 b)
+{
+    return { a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x };
+}
+
 inline mat4 mat4Identity()
 {
     return
@@ -184,9 +189,22 @@ inline mat4 mat4RotateY(float radians)
     float s = calc::Sin(radians);
     return
     {
-          c, 0.f,  -s, 0.f,
+        c, 0.f,  -s, 0.f,
         0.f, 1.f, 0.f, 0.f,
-          s, 0.f,   c, 0.f,
+        s, 0.f,   c, 0.f,
+        0.f, 0.f, 0.f, 1.f,
+    };
+}
+
+inline mat4 mat4RotateZ(float radians)
+{
+    float c = calc::Cos(radians);
+    float s = calc::Sin(radians);
+    return
+    {
+          c,   s, 0.f, 0.f,
+         -s,   c, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
         0.f, 0.f, 0.f, 1.f,
     };
 }

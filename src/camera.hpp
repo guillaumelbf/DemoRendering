@@ -25,9 +25,10 @@ struct CameraInputs
 
 struct Camera
 {
-    float3 position;
-    float pitch;
-    float yaw;
+    float3 position = {};
+    float pitch     = 0.f;
+    float yaw       = 0.f;
+    float roll      = 0.f;
 
     void UpdateFreeFly(const CameraInputs& inputs);
     mat4 GetViewMatrix() const;

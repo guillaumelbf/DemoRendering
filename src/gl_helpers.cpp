@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <vector>
 
@@ -9,6 +10,48 @@
 #include "types.hpp"
 #include "calc.hpp"
 #include "gl_helpers.hpp"
+
+// Implement dumb caching to avoid decompressing textures
+static bool LoadTextureFromCache(void** data, const char* filename, int* width, int* height, int* channels, bool linear)
+{
+    std::string cachedFile = filename;
+    cachedFile += linear ? ".texf" : ".tex";
+    cachedFile += ".cache";
+
+    FILE* file = fopen(cachedFile.c_str(), "rb");
+    if (file == nullptr)
+        return false;
+
+    size_t dataSize = 0;
+    fread(&dataSize, sizeof(size_t), 1, file);
+    fread(width,     sizeof(int), 1, file);
+    fread(height,    sizeof(int), 1, file);
+    fread(channels,  sizeof(int), 1, file);
+    *data = malloc(dataSize);
+    fread(*data, 1, dataSize, file);
+    fclose(file);
+
+    printf("Texture loaded from cache: %s (%d bytes)\n", filename, (int)dataSize);
+
+    return true;
+}
+
+static void SaveTextureToCache(const void* data, size_t dataSize, const char* filename, int width, int height, int channels, bool linear)
+{
+    std::string cachedFile = filename;
+    cachedFile += linear ? ".texf" : ".tex";
+    cachedFile += ".cache";
+
+    FILE* file = fopen(cachedFile.c_str(), "wb");
+    fwrite(&dataSize, sizeof(size_t), 1, file);
+    fwrite(&width,    sizeof(int), 1, file);
+    fwrite(&height,   sizeof(int), 1, file);
+    fwrite(&channels, sizeof(int), 1, file);
+    fwrite(data, 1, dataSize, file);
+    fclose(file);
+
+    printf("Texture saved to cache: %s (%d bytes)\n", filename, (int)dataSize);
+}
 
 GLuint gl::CreateShader(GLenum type, int sourceCount, const char** sources)
 {
@@ -99,15 +142,21 @@ void gl::UploadImage(const char* file, bool linear)
     stbi_set_flip_vertically_on_load(1);
     void* colors;
 
-    if (linear)
-        colors = stbi_loadf(file, &width, &height, &channels, 0);
-    else
-        colors = stbi_load(file, &width, &height, &channels, 0);
+    if (!LoadTextureFromCache(&colors, file, &width, &height, &channels, linear))
+    {
+        if (linear)
+            colors = stbi_loadf(file, &width, &height, &channels, 0);
+        else
+            colors = stbi_load(file, &width, &height, &channels, 0);
 
-    if (colors == nullptr)
-        fprintf(stderr, "Failed to load image '%s'\n", file);
-    else
-        printf("Load image '%s' (%dx%d %d channels)\n", file, width, height, channels);
+        if (colors == nullptr)
+            fprintf(stderr, "Failed to load image '%s'\n", file);
+        else
+            printf("Load image '%s' (%dx%d %d channels)\n", file, width, height, channels);
+
+        int byteSize = width * height * channels * (linear ? sizeof(float) : sizeof(char));
+        SaveTextureToCache(colors, byteSize, file, width, height, channels, linear);
+    }
 
     GLenum format;
     switch (channels)
@@ -257,7 +306,7 @@ void gl::UploadCubemap(const char* filename)
         return;
     }
 
-    // Parse each texture level and upload them to GPU
+    // Parse each cubemap face and each texture level and upload them to GPU
     std::vector<float4> buffer(header.width * header.height); // Buffer size for level 0
     for (int i = 0; i < 6; ++i)
     {

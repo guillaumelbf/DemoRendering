@@ -4,6 +4,7 @@
 
 #include "calc.hpp"
 
+#include "gl_helpers.hpp"
 #include "demo_mipmap.hpp"
 
 DemoMipmap::DemoMipmap(const DemoInputs& inputs)

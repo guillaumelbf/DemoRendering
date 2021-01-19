@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 #include <tiny_obj_loader.h>
 
@@ -199,7 +201,7 @@ MeshSlice MeshBuilder::GenIcosphere(int* startIndex, int depth)
     };
 
     int count = (int)(ARRAYSIZE(indices) * calc::Pow(4, (float)depth));
-    void* buffer = GetDst(startIndex, count);
+    GetDst(startIndex, count);
     int index = *vertexCount - count;
     int indexTmp = index;
 
@@ -225,7 +227,7 @@ static bool LoadObjFromCache(std::vector<FullVertex>& mesh, const char* filename
     fread(mesh.data(), sizeof(FullVertex), vertexCount, file);
     fclose(file);
 
-    printf("Loaded from cache: %s (%d vertices)\n", filename, (int)vertexCount);
+    printf("Model loaded from cache: %s (%d vertices)\n", filename, (int)vertexCount);
 
     return true;
 }
@@ -241,7 +243,7 @@ static void SaveObjToCache(const std::vector<FullVertex>& mesh, const char* file
     fwrite(&mesh[0], sizeof(FullVertex), vertexCount, file);
     fclose(file);
 
-    printf("Saved to cache: %s (%d vertices)\n", filename, (int)vertexCount);
+    printf("Model saved to cache: %s (%d vertices)\n", filename, (int)vertexCount);
 }
 
 MeshSlice MeshBuilder::LoadObj(int* startIndex, const char* objFile, const char* mtlDir, float scale)
@@ -277,7 +279,7 @@ MeshSlice MeshBuilder::LoadObj(int* startIndex, const char* objFile, const char*
                 int fv = shapes[s].mesh.num_face_vertices[f];
 
                 // Loop over vertices in the face.
-                for (size_t v = 0; v < fv; v++)
+                for (int v = 0; v < fv; v++)
                 {
                     // access to vertex
                     tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];

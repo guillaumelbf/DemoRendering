@@ -58,5 +58,5 @@ void Camera::UpdateFreeFly(const CameraInputs& inputs)
 
 mat4 Camera::GetViewMatrix() const
 {
-    return mat4RotateX(pitch) * mat4RotateY(yaw) * mat4Translate(-position);
+    return mat4RotateX(pitch) * mat4RotateY(yaw) * mat4RotateZ(roll) * mat4Translate(-position);
 }
