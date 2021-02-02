@@ -19,6 +19,7 @@ struct Vertex
 
 DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 {
+    mainCamera.position = { 0,0,4.f };
     // Upload vertex buffer
     /// CUBE
     {
@@ -71,7 +72,7 @@ DemoSkybox::DemoSkybox(const DemoInputs& inputs)
 
             MeshBuilder meshBuilder(descriptor, (void**)&vertices, &vertexCount);
 
-            sphere = meshBuilder.GenIcosphere(nullptr,4);
+            sphere = meshBuilder.LoadObj(nullptr, "media/solid.obj", "media", 1.f);//meshBuilder.GenIcosphere(nullptr,4);
         }
 
         // In VRAM

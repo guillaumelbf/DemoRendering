@@ -45,7 +45,7 @@
     <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\demo_mipmap.cpp" />
     <ClCompile Include="src\demo_texture_3d.cpp" />
-    <ClCompile Include="src\demo_cubemap.cpp" />
+    <ClCompile Include="src\demo_pbr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="third_party">
@@ -66,6 +66,6 @@
     <ClInclude Include="src\data.hpp" />
     <ClInclude Include="src\demo_mipmap.hpp" />
     <ClInclude Include="src\demo_texture_3d.hpp" />
-    <ClInclude Include="src\demo_cubemap.hpp" />
+    <ClInclude Include="src\demo_pbr.hpp" />
   </ItemGroup>
 </Project>

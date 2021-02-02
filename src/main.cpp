@@ -27,7 +27,6 @@
 #include "demo_quad.hpp"
 #include "demo_mipmap.hpp"
 #include "demo_texture_3d.hpp"
-#include "demo_cubemap.hpp"
 #include "demo_dll_wrapper.hpp"
 
 // TODO: Add demo include here
@@ -153,7 +152,6 @@ int main(int argc, char* argv[])
     demos.push_back(new DemoFBO(demoInputs));
     demos.push_back(new DemoMipmap(demoInputs));
     demos.push_back(new DemoTexture3D(demoInputs));
-    demos.push_back(new DemoCubemap(demoInputs));
     // TODO: Here, add other demos
     demos.push_back(new DemoSkybox(demoInputs));
     //demos.push_back(new DemoBloom(demoInputs));
