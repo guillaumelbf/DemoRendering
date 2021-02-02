@@ -212,6 +212,12 @@ void gl::UploadImageCubeMap(const std::string& folderPath)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
+void gl::UploadColoredTexture(float r, float g, float b, float a)
+{
+    float4 colors = { r, g, b, a };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_FLOAT, colors.e);
+}
+
 void gl::SetTextureDefaultParams(bool genMipmap)
 {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

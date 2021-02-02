@@ -7,12 +7,15 @@
 
 #include "mesh_builder.hpp"
 
+#define OBJ_CACHE_VERSION 1
+
 struct FullVertex
 {
     float3 position;
     float3 normal;
     float2 uv;
     float4 color;
+    float4 tangent;
 };
 
 static void ConvertVertices(void* dst, const FullVertex* src, int count, const VertexDescriptor& descriptor)
@@ -42,6 +45,12 @@ static void ConvertVertices(void* dst, const FullVertex* src, int count, const V
         {
             float4* dstColor = (float4*)(vertexStart + descriptor.colorOffset);
             *dstColor = srcVertex->color;
+        }
+
+        if (descriptor.hasTangent)
+        {
+            float4* dstTangent = (float4*)(vertexStart + descriptor.tangentOffset);
+            *dstTangent = srcVertex->tangent;
         }
     }
 }
@@ -211,6 +220,84 @@ MeshSlice MeshBuilder::GenIcosphere(int* startIndex, int depth)
     return { index, count };
 }
 
+MeshSlice MeshBuilder::GenUVSphere(int* startIndex, int lat, int lon)
+{
+    int count = lon * lat * 6;
+    GetDst(startIndex, count);
+    int index = *vertexCount - count;
+    MeshSlice slice = { index, count };
+
+    for (int i = 0; i < lat; ++i)
+    {
+        // Theta varies from 0 to 180
+        float theta        = calc::TAU / 2.f * (float)(i+0) / lat;
+        float thetaCos     = calc::Cos(theta);
+        float thetaSin     = calc::Sin(theta);
+
+        float thetaNext    = calc::TAU / 2.f * (float)(i+1) / lat;
+        float thetaNextCos = calc::Cos(thetaNext);
+        float thetaNextSin = calc::Sin(thetaNext);
+
+        for (int j = 0; j < lon; ++j)
+        {
+            // Phi varies from 0 to 360
+            float phi        = calc::TAU * (float)(j+0) / lon;
+            float phiCos     = calc::Cos(phi);
+            float phiSin     = calc::Sin(phi);
+
+            float phiNext    = calc::TAU * (float)(j+1) / lon;
+            float phiNextCos = calc::Cos(phiNext);
+            float phiNextSin = calc::Sin(phiNext);
+
+            // Compute positions
+            float3 p0 = {     thetaSin * phiCos,         thetaCos,     thetaSin * phiSin     };
+            float3 p1 = {     thetaSin * phiNextCos,     thetaCos,     thetaSin * phiNextSin };
+            float3 p2 = { thetaNextSin * phiCos,     thetaNextCos, thetaNextSin * phiSin     };
+            float3 p3 = { thetaNextSin * phiNextCos, thetaNextCos, thetaNextSin * phiNextSin };
+            float3 t0 = {                phiSin,              0.f,                phiCos     };
+            float3 t1 = {            phiNextSin,              0.f,                phiNextCos };
+            float3 t2 = {                phiSin,              0.f,                phiCos     };
+            float3 t3 = {            phiNextSin,              0.f,                phiNextCos };
+
+            FullVertex quad[6];
+            quad[0].position = quad[0].normal = p0;
+            quad[1].position = quad[1].normal = p1;
+            quad[2].position = quad[2].normal = p2;
+            quad[3].position = quad[3].normal = p2;
+            quad[4].position = quad[4].normal = p1;
+            quad[5].position = quad[5].normal = p3;
+
+            for (int i = 0; i < 6; ++i)
+                quad[i].position *= 0.5f; // pos between -0.5 and 0.5 (unit sphere)
+            
+            quad[0].tangent = float4(t0, 1.f);
+            quad[1].tangent = float4(t1, 1.f);
+            quad[2].tangent = float4(t2, 1.f);
+            quad[3].tangent = float4(t2, 1.f);
+            quad[4].tangent = float4(t1, 1.f);
+            quad[5].tangent = float4(t3, 1.f);
+
+            // Set uv
+            float u0 = 1.f - (j + 0.f) / (float)lon;
+            float u1 = 1.f - (j + 1.f) / (float)lon;
+            float v0 = 1.f - (i + 0.f) / (float)lat;
+            float v1 = 1.f - (i + 1.f) / (float)lat;
+
+            quad[0].uv = { u0, v0 };
+            quad[1].uv = { u1, v0 };
+            quad[2].uv = { u0, v1 };
+            quad[3].uv = quad[2].uv;
+            quad[4].uv = quad[1].uv;
+            quad[5].uv = { u1, v1 };
+
+            ConvertVertices(GetDst(&index, 6), quad, 6, descriptor);
+            index += 6;
+        }
+    }
+
+    return slice;
+}
+
 // Implement dumb caching to avoid parsing .obj again and again
 static bool LoadObjFromCache(std::vector<FullVertex>& mesh, const char* filename)
 {
@@ -220,6 +307,14 @@ static bool LoadObjFromCache(std::vector<FullVertex>& mesh, const char* filename
     FILE* file = fopen(cachedFile.c_str(), "rb");
     if (file == nullptr)
         return false;
+
+    size_t version;
+    fread(&version, sizeof(size_t), 1, file);
+    if (version != OBJ_CACHE_VERSION)
+    {
+        printf("Cached version mismatch for %s, reload...\n", filename);
+        return false;
+    }
 
     size_t vertexCount = 0;
     fread(&vertexCount, sizeof(size_t), 1, file);
@@ -238,6 +333,8 @@ static void SaveObjToCache(const std::vector<FullVertex>& mesh, const char* file
     cachedFile += ".cache";
 
     FILE* file = fopen(cachedFile.c_str(), "wb");
+    size_t version = OBJ_CACHE_VERSION;
+    fwrite(&version, sizeof(size_t), 1, file);
     size_t vertexCount = mesh.size();
     fwrite(&vertexCount, sizeof(size_t), 1, file);
     fwrite(&mesh[0], sizeof(FullVertex), vertexCount, file);

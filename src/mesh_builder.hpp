@@ -18,6 +18,8 @@ struct VertexDescriptor
     int normalOffset;
     bool hasColor;
     int colorOffset;
+    bool hasTangent; // vec4 (w is sign)
+    int tangentOffset;
 };
 
 class MeshBuilder
@@ -28,6 +30,7 @@ public:
     MeshSlice GenTriangle(int* startIndex);
     MeshSlice GenQuad(int* startIndex, float halfWidth, float halfHeight);
     MeshSlice GenIcosphere(int* startIndex, int depth = 2);
+    MeshSlice GenUVSphere(int* startIndex, int lat = 8, int lon = 12);
     MeshSlice LoadObj(int* startIndex, const char* objFile, const char* mtlDir, float scale = 1.f);
 
 private:

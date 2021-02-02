@@ -303,7 +303,7 @@ DemoFBO::~DemoFBO()
     glDeleteBuffers(1, &vertexBuffer);
 }
 
-void EditFloatUniform(GLuint program, const char* name, float speed = 0.01f)
+static void EditFloatUniform(GLuint program, const char* name, float speed = 0.01f)
 {
     GLint location = glGetUniformLocation(program, name);
     if (location == -1)
@@ -315,7 +315,7 @@ void EditFloatUniform(GLuint program, const char* name, float speed = 0.01f)
         glUniform1f(location, value);
 }
 
-void EditColorUniform(GLuint program, const char* name)
+static void EditColorUniform(GLuint program, const char* name)
 {
     GLint location = glGetUniformLocation(program, name);
     if (location == -1)
