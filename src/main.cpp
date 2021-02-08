@@ -3,7 +3,7 @@
 #include <vector>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define USE_PAUL_DLL
+//#define USE_PAUL_DLL
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -34,6 +34,7 @@
 // TODO: Add demo include here
 
 #include "demo_skybox.hpp"
+#include "demo_pbr.hpp"
 
 extern "C"
 {
@@ -148,7 +149,7 @@ int main(int argc, char* argv[])
     demoInputs.windowSize.x = (float)initWidth;
     demoInputs.windowSize.y = (float)initHeight;
 
-    int demoId = 5;
+    int demoId = 1;
     std::vector<Demo*> demos;
     demos.push_back(new DemoQuad(demoInputs));
     demos.push_back(new DemoFBO(demoInputs));
@@ -157,6 +158,7 @@ int main(int argc, char* argv[])
     demos.push_back(new DemoNormalMap(demoInputs));
     // TODO: Here, add other demos
     demos.push_back(new DemoSkybox(demoInputs));
+    demos.push_back(new DemoPBR(demoInputs));
     //demos.push_back(new DemoBloom(demoInputs));
 
 #ifdef USE_PAUL_DLL
