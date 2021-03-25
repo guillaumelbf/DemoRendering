@@ -20,6 +20,8 @@ struct VertexDescriptor
     int colorOffset;
     bool hasTangent; // vec4 (w is sign)
     int tangentOffset;
+    bool hasBitangent;
+    int bitangentOffset;
 };
 
 class MeshBuilder

@@ -6,6 +6,11 @@
 
 union float2
 {
+    float2() = default;
+    float2(float x, float y) 
+        : x(x),y(y)
+    {}
+
     float e[2];
     struct { float x; float y; };
     struct { float u; float v; };
