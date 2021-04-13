@@ -159,6 +159,24 @@ inline mat4 mat4Scale(float3 s)
     };
 }
 
+inline mat4 mat4Scale(mat4 inMat, float s)
+{
+    inMat.e[0] += s;
+    inMat.e[5] += s;
+    inMat.e[10] += s;
+
+    return inMat;
+}
+
+inline mat4 mat4Scale(mat4 inMat, float3 s)
+{
+    inMat.e[0] += s.x;
+    inMat.e[5] += s.y;
+    inMat.e[10] += s.z;
+
+    return inMat;
+}
+
 inline mat4 mat4Translate(float3 t)
 {
     return
@@ -168,6 +186,15 @@ inline mat4 mat4Translate(float3 t)
         0.f, 0.f, 1.f, 0.f,
         t.x, t.y, t.z, 1.f
     };
+}
+
+inline mat4 mat4Translate(mat4 inMat, float3 t)
+{
+    inMat.e[12] += t.x;
+    inMat.e[13] += t.y;
+    inMat.e[14] += t.z;
+
+    return inMat;
 }
 
 inline mat4 mat4RotateX(float radians)
