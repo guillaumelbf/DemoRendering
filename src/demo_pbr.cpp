@@ -324,7 +324,7 @@ DemoPBR::DemoPBR(const DemoInputs& inputs)
             vec3 albedo     = pow(texture(albedoMap, vUV).rgb, vec3(2.2));
             float metallic  = texture(metallicMap, vUV).r;
             float roughness = texture(roughnessMap, vUV).r;
-            float ao        = 1;//texture(aoMap, vUV).r;
+            float ao        = texture(aoMap, vUV).r;
 
             vec3 N = getNormalFromMap();
             vec3 V = normalize(camPos - vWorldPos);
@@ -382,6 +382,7 @@ DemoPBR::DemoPBR(const DemoInputs& inputs)
             color = pow(color, vec3(1.0/2.2)); 
 
             fragColor = vec4(color, 1.0);
+            //fragColor = vec4(texture(aoMap, vUV).rgb, 1.0);
         }
         )GLSL"
     );
@@ -389,28 +390,28 @@ DemoPBR::DemoPBR(const DemoInputs& inputs)
     {
         glGenTextures(1, &pbrSphere.albedo);
         glBindTexture(GL_TEXTURE_2D, pbrSphere.albedo);
-        gl::UploadImage("media/Mat_Albedo.png");
+        gl::UploadImage("media/Mat_Albedo.jpg");
         gl::SetTextureDefaultParams();
 
         glGenTextures(1, &pbrSphere.normal);
         glBindTexture(GL_TEXTURE_2D, pbrSphere.normal);
-        gl::UploadImage("media/Mat_Normal.png");
+        gl::UploadImage("media/Mat_Normal.jpg");
         gl::SetTextureDefaultParams();
 
         glGenTextures(1, &pbrSphere.metallic);
         glBindTexture(GL_TEXTURE_2D, pbrSphere.metallic);
-        gl::UploadImage("media/Mat_Metallic.png");
+        gl::UploadImage("media/Mat_Metallic.jpg");
         gl::SetTextureDefaultParams();
 
         glGenTextures(1, &pbrSphere.roughness);
         glBindTexture(GL_TEXTURE_2D, pbrSphere.roughness);
-        gl::UploadImage("media/Mat_Roughness.png");
+        gl::UploadImage("media/Mat_Roughness.jpg");
         gl::SetTextureDefaultParams();
 
-        /*glGenTextures(1, &pbrSphere.ao);
+        glGenTextures(1, &pbrSphere.ao);
         glBindTexture(GL_TEXTURE_2D, pbrSphere.ao);
-        gl::UploadImage("media/Mat_AO.bmp");
-        gl::SetTextureDefaultParams();*/
+        gl::UploadImage("media/Mat_AO.jpg");
+        gl::SetTextureDefaultParams();
     }
 }
 
@@ -429,6 +430,7 @@ DemoPBR::~DemoPBR()
 
 void DemoPBR::UpdateAndRender(const DemoInputs& inputs)
 {
+    glEnable(GL_DEPTH_TEST);
     mainCamera.UpdateFreeFly(inputs.cameraInputs);
     glClearColor(0.33, 0.33, 0.33, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -484,12 +486,12 @@ void DemoPBR::UpdateAndRender(const DemoInputs& inputs)
 
         if (usePBRTexture)
         {
-            glUniform1i(glGetAttribLocation(usedProgram.id, "albedoMap"), 0);
-            glUniform1i(glGetAttribLocation(usedProgram.id, "normalMap"), 1);
-            glUniform1i(glGetAttribLocation(usedProgram.id, "metallicMap"), 2);
-            glUniform1i(glGetAttribLocation(usedProgram.id, "roughnessMap"), 3);
-            //glUniform1i(glGetAttribLocation(usedProgram.id, "aoMap"), 4);
-            
+            glUniform1i(glGetUniformLocation(usedProgram.id, "albedoMap"), 0);
+            glUniform1i(glGetUniformLocation(usedProgram.id, "normalMap"), 1);
+            glUniform1i(glGetUniformLocation(usedProgram.id, "metallicMap"), 2);
+            glUniform1i(glGetUniformLocation(usedProgram.id, "roughnessMap"), 3);
+            glUniform1i(glGetUniformLocation(usedProgram.id, "aoMap"), 4);
+
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, pbrSphere.albedo);
             glActiveTexture(GL_TEXTURE1);
@@ -498,8 +500,8 @@ void DemoPBR::UpdateAndRender(const DemoInputs& inputs)
             glBindTexture(GL_TEXTURE_2D, pbrSphere.metallic);
             glActiveTexture(GL_TEXTURE3);
             glBindTexture(GL_TEXTURE_2D, pbrSphere.roughness);
-            /*glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, pbrSphere.ao);*/
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, pbrSphere.ao);
         }
         else
         {

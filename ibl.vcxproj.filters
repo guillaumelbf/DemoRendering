@@ -47,6 +47,7 @@
     <ClCompile Include="src\demo_texture_3d.cpp" />
     <ClCompile Include="src\demo_pbr.cpp" />
     <ClCompile Include="src\demo_normalmap.cpp" />
+    <ClCompile Include="src\demo_ibl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="third_party">
@@ -69,5 +70,6 @@
     <ClInclude Include="src\demo_texture_3d.hpp" />
     <ClInclude Include="src\demo_pbr.hpp" />
     <ClInclude Include="src\demo_normalmap.hpp" />
+    <ClInclude Include="src\demo_ibl.hpp" />
   </ItemGroup>
 </Project>

@@ -35,6 +35,7 @@
 
 #include "demo_skybox.hpp"
 #include "demo_pbr.hpp"
+#include "demo_ibl.hpp"
 
 extern "C"
 {
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
     demoInputs.windowSize.x = (float)initWidth;
     demoInputs.windowSize.y = (float)initHeight;
 
-    int demoId = 1;
+    int demoId = 7;
     std::vector<Demo*> demos;
     demos.push_back(new DemoQuad(demoInputs));
     demos.push_back(new DemoFBO(demoInputs));
@@ -159,6 +160,7 @@ int main(int argc, char* argv[])
     // TODO: Here, add other demos
     demos.push_back(new DemoSkybox(demoInputs));
     demos.push_back(new DemoPBR(demoInputs));
+    demos.push_back(new DemoIBL(demoInputs));
     //demos.push_back(new DemoBloom(demoInputs));
 
 #ifdef USE_PAUL_DLL

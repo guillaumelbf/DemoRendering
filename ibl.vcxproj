@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\demo_ibl.cpp" />
     <ClCompile Include="src\demo_mipmap.cpp" />
     <ClCompile Include="src\demo_normalmap.cpp" />
     <ClCompile Include="src\demo_pbr.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="src\demo.hpp" />
     <ClInclude Include="src\demo_dll_wrapper.hpp" />
     <ClInclude Include="src\demo_fbo.hpp" />
+    <ClInclude Include="src\demo_ibl.hpp" />
     <ClInclude Include="src\demo_mipmap.hpp" />
     <ClInclude Include="src\demo_normalmap.hpp" />
     <ClInclude Include="src\demo_pbr.hpp" />
